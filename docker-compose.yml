@@ -1,0 +1,29 @@
+version: '3.7'
+services:
+  pushgateway:
+    image: prom/pushgateway
+    ports:
+      - "9091:9091"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - pushgateway
+    restart: unless-stopped
+    
+  cronjob:
+    build: .
+    container_name: cron-python-job
+    volumes:
+      - ./job_script.py:/usr/src/app/job_script.py
+      - ./crontab:/etc/cron.d/crontab
+    ports:
+      - "9092:9092"
+    depends_on:
+      - pushgateway
+    restart: unless-stopped
